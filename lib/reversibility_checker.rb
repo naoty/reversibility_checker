@@ -1,5 +1,2 @@
+require "reversibility_checker/railtie"
 require "reversibility_checker/version"
-
-module ReversibilityChecker
-  # Your code goes here...
-end
