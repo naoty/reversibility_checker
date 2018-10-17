@@ -19,6 +19,7 @@ namespace :db do
       config["database"] += "_tmp"
 
       ActiveRecord::Tasks::DatabaseTasks.create(config)
+      at_exit { ActiveRecord::Tasks::DatabaseTasks.drop(config) }
 
       ActiveRecord::Base.establish_connection(config)
       ActiveRecord::Base.connection.migration_context.up(current_version)
@@ -34,8 +35,6 @@ namespace :db do
       # Take a snapshot again
       rollbacked_buffer = StringIO.new
       ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, rollbacked_buffer)
-
-      ActiveRecord::Tasks::DatabaseTasks.drop(config)
 
       # Compare two snapshots
       diff = Diffy::Diff.new(current_buffer.string, rollbacked_buffer.string)
