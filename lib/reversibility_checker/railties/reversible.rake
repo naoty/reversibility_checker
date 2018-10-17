@@ -1,9 +1,12 @@
 require "active_record"
+require "stringio"
 
 namespace :db do
   namespace :migrate do
     desc "Check the reversibility of migration files"
     task check_reversibility: :load_config do
+      require "active_record/schema_dumper"
+
       config = ActiveRecord::Base.configurations.fetch(Rails.env)
       migrations_paths = ActiveRecord::Tasks::DatabaseTasks.migrations_paths
 
@@ -18,6 +21,20 @@ namespace :db do
 
       ActiveRecord::Base.establish_connection(config)
       ActiveRecord::Migrator.up(migrations_paths, current_version)
+
+      # Take a snapshot of the temporary schema
+      current_buffer = StringIO.new
+      ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, current_buffer)
+
+      # Migrate a temporary schema upto latest
+      ActiveRecord::Tasks::DatabaseTasks.migrate
+
+      # Take a snapshot again
+      latest_buffer = StringIO.new
+      ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, latest_buffer)
+
+      # Compare two snapshots
+      binding.irb
 
       ActiveRecord::Tasks::DatabaseTasks.drop(config)
     end
