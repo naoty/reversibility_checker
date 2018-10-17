@@ -18,6 +18,9 @@ namespace :db do
       # Use a temporary database
       config["database"] += "_tmp"
 
+      # Suppress messages from db tasks
+      $stdout = Tempfile.new
+
       ActiveRecord::Tasks::DatabaseTasks.create(config)
       at_exit { ActiveRecord::Tasks::DatabaseTasks.drop(config) }
 
@@ -40,11 +43,9 @@ namespace :db do
       diff = Diffy::Diff.new(current_buffer.string, rollbacked_buffer.string)
 
       if diff.count > 0
-        puts diff.to_s(:color)
+        Object::STDOUT.puts diff.to_s(:color)
         exit 1
       end
-
-      puts "No diff"
     end
   end
 end
