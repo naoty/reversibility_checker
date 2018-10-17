@@ -21,15 +21,15 @@ namespace :db do
       ActiveRecord::Tasks::DatabaseTasks.create(config)
 
       ActiveRecord::Base.establish_connection(config)
-      ActiveRecord::Migrator.up(migrations_paths, current_version)
+      ActiveRecord::Base.connection.migration_context.up(current_version)
 
       # Take a snapshot of the temporary schema
       current_buffer = StringIO.new
       ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, current_buffer)
 
       # Migrate a temporary schema upto latest
-      ActiveRecord::Tasks::DatabaseTasks.migrate
-      ActiveRecord::Migrator.down(migrations_paths, current_version)
+      ActiveRecord::Base.connection.migration_context.up
+      ActiveRecord::Base.connection.migration_context.down(current_version)
 
       # Take a snapshot again
       rollbacked_buffer = StringIO.new
