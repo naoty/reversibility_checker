@@ -35,19 +35,17 @@ namespace :db do
       rollbacked_buffer = StringIO.new
       ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, rollbacked_buffer)
 
-      # Compare two snapshots
-      diffs = Diff::LCS.diff(current_buffer.string, rollbacked_buffer.string)
-      binding.irb
-
       ActiveRecord::Tasks::DatabaseTasks.drop(config)
 
-      if diffs.count > 0
-        diffs.each do |diff|
-          diff.each do |line|
-            p line
-          end
-        end
+      # Compare two snapshots
+      diff = Diffy::Diff.new(current_buffer.string, rollbacked_buffer.string)
+
+      if diff.count > 0
+        puts diff.to_s(:color)
+        exit 1
       end
+
+      puts "No diff"
     end
   end
 end
