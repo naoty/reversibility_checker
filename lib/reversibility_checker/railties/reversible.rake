@@ -1,4 +1,5 @@
 require "active_record"
+require "diffy"
 require "stringio"
 
 namespace :db do
@@ -28,15 +29,25 @@ namespace :db do
 
       # Migrate a temporary schema upto latest
       ActiveRecord::Tasks::DatabaseTasks.migrate
+      ActiveRecord::Migrator.down(migrations_paths, current_version)
 
       # Take a snapshot again
-      latest_buffer = StringIO.new
-      ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, latest_buffer)
+      rollbacked_buffer = StringIO.new
+      ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, rollbacked_buffer)
 
       # Compare two snapshots
+      diffs = Diff::LCS.diff(current_buffer.string, rollbacked_buffer.string)
       binding.irb
 
       ActiveRecord::Tasks::DatabaseTasks.drop(config)
+
+      if diffs.count > 0
+        diffs.each do |diff|
+          diff.each do |line|
+            p line
+          end
+        end
+      end
     end
   end
 end

@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     reversibility_checker (0.1.0)
+      diffy
       rails (~> 5.0)
 
 GEM
@@ -52,6 +53,7 @@ GEM
     builder (3.2.3)
     concurrent-ruby (1.0.5)
     crass (1.0.4)
+    diffy (3.2.1)
     erubi (1.7.1)
     globalid (0.4.1)
       activesupport (>= 4.2.0)
