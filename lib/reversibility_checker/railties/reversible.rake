@@ -28,7 +28,7 @@ namespace :db do
       current_buffer = StringIO.new
       ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, current_buffer)
 
-      # Migrate a temporary schema upto latest
+      # Migrate a temporary schema upto latest and rollback to current version
       ActiveRecord::Base.connection.migration_context.up
       ActiveRecord::Base.connection.migration_context.down(current_version)
 
