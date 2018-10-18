@@ -1,6 +1,5 @@
 require "active_record"
 require "diffy"
-require "stringio"
 
 namespace :db do
   namespace :migrate do
@@ -28,19 +27,17 @@ namespace :db do
       ActiveRecord::Base.connection.migration_context.up(current_version)
 
       # Take a snapshot of the temporary schema
-      current_buffer = StringIO.new
-      ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, current_buffer)
+      current_schema = ReversibilityChecker.dump(config)
 
       # Migrate a temporary schema upto latest and rollback to current version
       ActiveRecord::Base.connection.migration_context.up
       ActiveRecord::Base.connection.migration_context.down(current_version)
 
       # Take a snapshot again
-      rollbacked_buffer = StringIO.new
-      ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, rollbacked_buffer)
+      rollbacked_schema = ReversibilityChecker.dump(config)
 
       # Compare two snapshots
-      diff = Diffy::Diff.new(current_buffer.string, rollbacked_buffer.string)
+      diff = Diffy::Diff.new(current_schema, rollbacked_schema)
 
       if diff.count > 0
         Object::STDOUT.puts diff.to_s(:color)
