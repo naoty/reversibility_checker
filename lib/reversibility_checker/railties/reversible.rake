@@ -8,7 +8,8 @@ namespace :db do
       require "active_record/schema_dumper"
 
       config = ActiveRecord::Base.configurations.fetch(Rails.env)
-      current_version = ReversibilityChecker.current_schema_version(config)
+      current_version = ReversibilityChecker.current_version(config)
+      target_versions = ReversibilityChecker.target_versions(config, current_version)
       migrations_paths = ActiveRecord::Tasks::DatabaseTasks.migrations_paths
 
       # Use a temporary database
@@ -18,28 +19,34 @@ namespace :db do
       $stdout = Tempfile.new
 
       ActiveRecord::Tasks::DatabaseTasks.create(config)
+      ActiveRecord::Base.establish_connection(config)
       at_exit { ActiveRecord::Tasks::DatabaseTasks.drop(config) }
 
-      ActiveRecord::Base.establish_connection(config)
-      ActiveRecord::Base.connection.migration_context.up(current_version)
+      reversible = true
+      base_version = current_version
 
-      # Take a snapshot of the temporary schema
-      current_schema = ReversibilityChecker.dump(config)
+      target_versions.each do |target_version|
+        ActiveRecord::Base.connection.migration_context.up(base_version)
+        base_schema = ReversibilityChecker.dump(config)
 
-      # Migrate a temporary schema upto latest and rollback to current version
-      ActiveRecord::Base.connection.migration_context.up
-      ActiveRecord::Base.connection.migration_context.down(current_version)
+        ActiveRecord::Base.connection.migration_context.up(target_version)
+        ActiveRecord::Base.connection.migration_context.down(base_version)
+        rollbacked_schema = ReversibilityChecker.dump(config)
 
-      # Take a snapshot again
-      rollbacked_schema = ReversibilityChecker.dump(config)
+        diff = Diffy::Diff.new(base_schema, rollbacked_schema)
 
-      # Compare two snapshots
-      diff = Diffy::Diff.new(current_schema, rollbacked_schema)
+        if diff.count > 0
+          Object::STDOUT.puts "== +#{target_version} ============================================================"
+          Object::STDOUT.puts diff.to_s(:color)
+          Object::STDOUT.puts "== -#{base_version} ============================================================"
+          Object::STDOUT.puts ""
+          reversible = false
+        end
 
-      if diff.count > 0
-        Object::STDOUT.puts diff.to_s(:color)
-        exit 1
+        base_version = target_version
       end
+
+      exit 1 unless reversible
     end
   end
 end
