@@ -8,11 +8,8 @@ namespace :db do
       require "active_record/schema_dumper"
 
       config = ActiveRecord::Base.configurations.fetch(Rails.env)
+      current_version = ReversibilityChecker.current_schema_version(config)
       migrations_paths = ActiveRecord::Tasks::DatabaseTasks.migrations_paths
-
-      ActiveRecord::Base.establish_connection(config)
-      current_version = ActiveRecord::Migrator.current_version
-      ActiveRecord::Base.remove_connection
 
       # Use a temporary database
       config["database"] += "_tmp"

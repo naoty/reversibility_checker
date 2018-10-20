@@ -17,4 +17,14 @@ module ReversibilityChecker
       file.read
     end
   end
+
+  def self.current_schema_version(config)
+    return ENV["CURRENT_VERSION"].to_i unless ENV["CURRENT_VERSION"].nil?
+
+    ActiveRecord::Base.establish_connection(config)
+    version = ActiveRecord::Migrator.current_version
+    ActiveRecord::Base.remove_connection
+
+    return version
+  end
 end

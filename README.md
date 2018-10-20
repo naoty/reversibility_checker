@@ -16,6 +16,12 @@ $ rails db:migrate:check_reversibility
 
 This task checks diffs between a current schema and a schema which migrated and rollbacked. If there are diffs, it will print the diffs and exit with exit status `1`.
 
+```bash
+$ rails db:migrate:check_reversibility CURRENT_VERSION=20181020120000
+```
+
+`CURRENT_VERSION` environment variable specifies a current schema version before migration. If it isn't passed, a current schema version will be the one of local database.
+
 ## Example
 
 if you create a following migration file,
