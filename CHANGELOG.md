@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [[0.2.0]](https://github.com/naoty/reversibility_checker/compare/v0.1.1...v0.2.0) - 2018-10-21
 ### Added
 * Support `CURRENT_VERSION` environment variable to specify a current schema version before migration.
 
