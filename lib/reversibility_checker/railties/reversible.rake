@@ -20,7 +20,11 @@ namespace :db do
 
       ActiveRecord::Tasks::DatabaseTasks.create(config)
       ActiveRecord::Base.establish_connection(config)
-      at_exit { ActiveRecord::Tasks::DatabaseTasks.drop(config) }
+
+      at_exit {
+        ActiveRecord::Tasks::DatabaseTasks.drop(config)
+        ActiveRecord::Base.remove_connection
+      }
 
       reversible = true
       base_version = current_version
