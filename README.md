@@ -42,6 +42,7 @@ when you run `db:migrate:check_reversibility` task, this task will run `db:migra
 
 ```bash
 $ rails db:migrate:check_reversibility
+== +20181020041241 ============================================================
  # This file is auto-generated from the current state of the database. Instead
  # of editing this file, please use the migrations feature of Active Record to
  # incrementally modify your database, and then regenerate this schema definition.
@@ -65,4 +66,5 @@ $ rails db:migrate:check_reversibility
    end
 
  end
+== -20181019134724 ============================================================
 ```
